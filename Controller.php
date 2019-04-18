@@ -2,6 +2,7 @@
 
 namespace Piwik\Plugins\DisableTracking;
 
+use Piwik\Common;
 use Piwik\Piwik;
 use Piwik\Plugin\ControllerAdmin;
 
@@ -21,7 +22,7 @@ class Controller extends ControllerAdmin
     {
         Piwik::checkUserHasSuperUserAccess();
 
-        if (isset($_POST['saveDisabledSitesState'])) {
+        if (!empty(Common::getRequestVar('saveDisabledSitesState', '', null, $_POST))) {
             DisableTracking::save();
         }
 

@@ -80,15 +80,15 @@ class DisableTracking extends Plugin
      */
     public function newTrackingRequest()
     {
-        if (isset($_GET['idsite'])) {
-            $siteId = (int) $_GET['idsite'];
-            if (Manager::getInstance()->isPluginActivated('ProtectTrackID')) {
+        $siteId = Common::getRequestVar('idsite', null, Manager::getInstance()->isPluginActivated('ProtectTrackID') ? 'string' : 'int');
+        if (null !== $siteId) {
+            if (is_string($siteId)) {
                 $settings = StaticContainer::get('Piwik\Plugins\ProtectTrackID\SystemSettings');
                 $base = $settings->base->getValue();
                 $salt = $settings->salt->getValue();
                 $length = $settings->length->getValue();
                 $Hashid = new Hashids($salt, $length, $base);
-                $siteId = (int) $Hashid->decode($_GET['idsite'])[0];
+                $siteId = (int) $Hashid->decode($siteId)[0];
             }
             if (self::isSiteTrackingDisabled($siteId)) {
                 // End tracking here, as of tracking for this page should be disabled, admin sais.
@@ -155,10 +155,11 @@ class DisableTracking extends Plugin
     public static function save()
     {
         foreach ($_POST as $key => $state) {
+            $key = Common::sanitizeInputValue($key);
             if (false !== strpos($key, '-')) {
                 $id = explode('-', $key);
                 $id = $id[1];
-                if ('on' === $state) {
+                if ('on' === Common::sanitizeInputValue($state)) {
                     self::disableSiteTracking($id);
                     $disabled[] = $id;
                 }
