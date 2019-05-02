@@ -10,6 +10,7 @@
 namespace Piwik\Plugins\DisableTracking;
 
 use Hashids\Hashids;
+use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
 use Piwik\Db;
@@ -36,25 +37,14 @@ class DisableTracking extends Plugin
      */
     public static function getSitesStates()
     {
-        $sql = '
-              SELECT
-                `idsite` as `id`,
-                `name`,
-                `main_url`
-              FROM
-                `' . Common::prefixTable('site') . '`
-              ORDER BY
-                `name` ASC
-            ';
+        $sites = Request::processRequest('SitesManager.getAllSites');
 
-        $rows = Db::fetchAll($sql);
-
-        foreach ($rows as $row) {
+        foreach ($sites as $site) {
             $ret[] = [
-                'id' => $row['id'],
-                'label' => $row['name'],
-                'url' => $row['main_url'],
-                'disabled' => self::isSiteTrackingDisabled($row['id']),
+                'id' => $site['idsite'],
+                'label' => $site['name'],
+                'url' => $site['main_url'],
+                'disabled' => self::isSiteTrackingDisabled($site['idsite']),
             ];
         }
 
@@ -181,6 +171,10 @@ class DisableTracking extends Plugin
     {
         Piwik::checkUserHasAdminAccess($idSites);
 
+        if (!self::sitesExist($idSites)) {
+            throw new \Exception('Check given site ids');
+        }
+
         foreach ($idSites as $key => $idSite) {
             if ('on' === $disabled) {
                 if (!self::isSiteTrackingDisabled($idSite)) {
@@ -209,6 +203,10 @@ class DisableTracking extends Plugin
      */
     private static function disableSiteTracking($id)
     {
+        if (empty(Request::processRequest('SitesManager.getSiteFromId', ['idSite' => $id]))) {
+            throw new \Exception('Invalid site ID');
+        }
+
         if (!self::isSiteTrackingDisabled($id)) {
             $sql = '
                     INSERT INTO `' . Common::prefixTable(self::TABLE_DISABLE_TRACKING_MAP) . '`
@@ -242,5 +240,22 @@ class DisableTracking extends Plugin
             $sql .= ' AND `siteId` NOT IN (' . implode(',', $siteIds) . ')';
         }
         Db::query($sql);
+    }
+
+    /**
+     * Checks the given site IDs exists.
+     *
+     * @param array $ids the website ids list
+     *
+     * @return bool true if all the IDs exists, false otherwise
+     */
+    private static function sitesExist($ids)
+    {
+        $sites = Request::processRequest('SitesManager.getSitesIdWithAdminAccess');
+        if (empty($sites)) {
+            return false;
+        }
+
+        return empty(array_diff($ids, $sites));
     }
 }
