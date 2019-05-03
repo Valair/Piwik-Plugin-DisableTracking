@@ -78,7 +78,11 @@ class DisableTracking extends Plugin
                 $salt = $settings->salt->getValue();
                 $length = $settings->length->getValue();
                 $Hashid = new Hashids($salt, $length, $base);
-                $siteId = (int) $Hashid->decode($siteId)[0];
+                $ret = $Hashid->decode($siteId);
+                if (empty($ret)) {
+                    die();
+                }
+                $siteId = $ret[0];
             }
             if (self::isSiteTrackingDisabled($siteId)) {
                 // End tracking here, as of tracking for this page should be disabled, admin sais.
