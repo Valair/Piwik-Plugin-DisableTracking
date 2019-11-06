@@ -39,4 +39,4 @@ $finder = Finder::create()
 return Config::create()
     ->setRules($rules)
     ->setFinder($finder)
-    ->setUsingCache(true);
+    ->setUsingCache(false);

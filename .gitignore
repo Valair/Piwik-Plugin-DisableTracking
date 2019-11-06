@@ -1,5 +1,6 @@
 # dependencies
 /vendor
+dist
 /bin/*
 !/bin/.gitkeep
 

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project name="wai-matomo-plugin-DisableTracking" basedir="." default="release">
+
+    <property name="distribution.basedir" value="dist"/>
+    <property name="distribution.dir" value="${distribution.basedir}/DisableTracking"/>
+
+    <fileset dir="${project.basedir}" id="release-files">
+        <include name="README.md"/>
+        <include name="CHANGELOG.md"/>
+        <include name="plugin.json"/>
+        <include name="*.php"/>
+        <include name="plugin.json"/>
+        <include name="templates/**/*"/>
+        <include name="lang/**/*"/>
+    </fileset>
+
+    <fileset dir="${project.basedir}" id="composer-files">
+        <include name="composer.json"/>
+        <include name="composer.lock"/>
+    </fileset>
+
+    <target name="clean">
+        <delete dir="${distribution.basedir}" quiet="true"/>
+    </target>
+
+    <target name="release" description="Build release" depends="clean">
+        <mkdir dir="${distribution.dir}" />
+        <copy todir="${distribution.dir}">
+            <fileset refid="release-files"/>
+        </copy>
+        <copy todir="${distribution.dir}">
+            <fileset refid="composer-files"/>
+        </copy>
+        <exec command="composer install --no-dev" dir="${distribution.dir}" />
+        <tar destfile="dist/DisableTracking.tar.gz" compression="gzip" basedir="dist"/>
+    </target>
+</project>
