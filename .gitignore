@@ -1,1 +1,11 @@
+# dependencies
+/vendor
+dist
+/bin/*
+!/bin/.gitkeep
+
+# related to local development
+TODO
+.php_cs.cache
 .idea
+.DS_Store

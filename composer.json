@@ -1,0 +1,14 @@
+{
+    "require": {
+        "hashids/hashids": "^1.0",
+        "ramsey/uuid": "^3.4"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.14",
+        "phing/phing": "^2.16",
+        "pear/archive_tar": "^1.4"
+    },
+    "config": {
+        "bin-dir": "bin"
+    }
+}
