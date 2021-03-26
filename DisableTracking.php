@@ -59,7 +59,7 @@ class DisableTracking extends Plugin
     public function registerEvents()
     {
         return [
-            'Tracker.initRequestSet' => 'newTrackingRequest',
+            'Tracker.isExcludedVisit' => 'isExcludedVisit',
         ];
     }
 
@@ -68,7 +68,7 @@ class DisableTracking extends Plugin
      *
      * @throws \Exception if an error occurred
      */
-    public function newTrackingRequest()
+    public function isExcludedVisit(&$excluded, $request)
     {
         $siteId = Common::getRequestVar('idsite', null, Manager::getInstance()->isPluginActivated('ProtectTrackID') ? 'string' : 'int');
         if (null !== $siteId) {
