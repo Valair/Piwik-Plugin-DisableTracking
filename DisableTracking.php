@@ -11,6 +11,7 @@ namespace Piwik\Plugins\DisableTracking;
 
 use Hashids\Hashids;
 use Piwik\API\Request;
+use Piwik\Cache;
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
 use Piwik\Db;
@@ -70,24 +71,10 @@ class DisableTracking extends Plugin
      */
     public function isExcludedVisit(&$excluded, $request)
     {
-        $siteId = Common::getRequestVar('idsite', null, Manager::getInstance()->isPluginActivated('ProtectTrackID') ? 'string' : 'int');
-        if (null !== $siteId) {
-            if (is_string($siteId)) {
-                $settings = StaticContainer::get('Piwik\Plugins\ProtectTrackID\SystemSettings');
-                $base = $settings->base->getValue();
-                $salt = $settings->salt->getValue();
-                $length = $settings->length->getValue();
-                $Hashid = new Hashids($salt, $length, $base);
-                $ret = $Hashid->decode($siteId);
-                if (empty($ret)) {
-                    die();
-                }
-                $siteId = $ret[0];
-            }
-            if (self::isSiteTrackingDisabled($siteId)) {
-                // End tracking here, as of tracking for this page should be disabled, admin sais.
-                die();
-            }
+        $siteId = $request->getIdSite();
+
+        if (self::isSiteTrackingDisabled($siteId)) {
+            $excluded = true;
         }
     }
 
@@ -102,7 +89,12 @@ class DisableTracking extends Plugin
      */
     public static function isSiteTrackingDisabled($siteId)
     {
-        $sql = '
+        $cache = Cache::getEagerCache();
+
+        if ($cache->contains('DisableTracking_' . $siteId)) {
+            return $cache->fetch('DisableTracking_' . $siteId);
+        } else {
+            $sql = '
                 SELECT
                   count(*) AS `disabled`
                 FROM ' . Common::prefixTable(self::TABLE_DISABLE_TRACKING_MAP) . '
@@ -111,9 +103,12 @@ class DisableTracking extends Plugin
                     deleted_at IS NULL;
             ';
 
-        $state = Db::fetchAll($sql, [':siteId' => $siteId]);
+            $state = Db::fetchAll($sql, [':siteId' => $siteId]);
+            $isSiteTrackingDisabled = (bool) $state[0]['disabled'];
+            $cache->save('DisableTracking_' . $siteId, $isSiteTrackingDisabled);
 
-        return (bool) $state[0]['disabled'];
+            return $isSiteTrackingDisabled;
+        }
     }
 
     /**
@@ -194,6 +189,9 @@ class DisableTracking extends Plugin
                             `siteId` = :idSite';
                 Db::query($sql, [':idSite' => $idSite]);
             }
+
+            $cache = Cache::getEagerCache();
+            $cache->delete('DisableTracking_' . $idSite);
         }
     }
 
@@ -244,6 +242,17 @@ class DisableTracking extends Plugin
             $sql .= ' AND `siteId` NOT IN (' . implode(',', $siteIds) . ')';
         }
         Db::query($sql);
+
+        $sql = '
+                SELECT
+                    siteId
+                FROM ' . Common::prefixTable(self::TABLE_DISABLE_TRACKING_MAP);
+        $idSites = Db::fetchAll($sql);
+
+        foreach ($idSites as $idSite) {
+            $cache = Cache::getEagerCache();
+            $cache->delete('DisableTracking_' . $idSite['siteId']);
+        }
     }
 
     /**
