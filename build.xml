@@ -14,11 +14,6 @@
         <include name="lang/**/*"/>
     </fileset>
 
-    <fileset dir="${project.basedir}" id="composer-files">
-        <include name="composer.json"/>
-        <include name="composer.lock"/>
-    </fileset>
-
     <target name="clean">
         <delete dir="${distribution.basedir}" quiet="true"/>
     </target>
@@ -28,10 +23,7 @@
         <copy todir="${distribution.dir}">
             <fileset refid="release-files"/>
         </copy>
-        <copy todir="${distribution.dir}">
-            <fileset refid="composer-files"/>
-        </copy>
-        <exec command="composer install --no-dev" dir="${distribution.dir}" />
         <tar destfile="dist/DisableTracking.tar.gz" compression="gzip" basedir="dist"/>
+        <delete dir="dist/DisableTracking" includeemptydirs="true" quiet="true"/>
     </target>
 </project>
