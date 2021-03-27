@@ -9,15 +9,12 @@
 
 namespace Piwik\Plugins\DisableTracking;
 
-use Hashids\Hashids;
 use Piwik\API\Request;
 use Piwik\Cache;
 use Piwik\Common;
-use Piwik\Container\StaticContainer;
 use Piwik\Db;
 use Piwik\Piwik;
 use Piwik\Plugin;
-use Piwik\Plugin\Manager;
 
 /**
  * Disable Tracking plugin.
@@ -198,7 +195,6 @@ class DisableTracking extends Plugin
     /**
      * Disables tracking for the given site.
      *
-     *
      * @param int $id the site do enable tracking for
      *
      * @throws \Exception if an error occurred
@@ -222,7 +218,6 @@ class DisableTracking extends Plugin
 
     /**
      * Enables tracking for all sites except the given siteIds.
-     *
      *
      * @param array $siteIds the sites to exclude from process
      *
